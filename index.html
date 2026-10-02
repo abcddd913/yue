@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub Pages 图床</title>
+<style>
+:root {
+  --purple1: #667eea;
+  --purple2: #764ba2;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif;
+  background: #f4f6fb;
+  color: #222;
+}
+header {
+  background: linear-gradient(135deg, var(--purple1), var(--purple2));
+  color: white;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.15);
+}
+header h1 {
+  font-size: 20px;
+  margin: 0;
+}
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: #667eea;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  transition: .2s;
+}
+button:hover {
+  transform: translateY(-1px);
+  opacity: .95;
+}
+button.secondary {
+  background: #eef0ff;
+  color: #4b4b8f;
+}
+button.danger {
+  background: #ff5c5c;
+}
+.container {
+  max-width: 1200px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+.panel {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0,0,0,.08);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.panel h2 {
+  margin-top: 0;
+  font-size: 18px;
+}
+.token-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+input[type=password], input[type=text] {
+  flex: 1;
+  min-width: 220px;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  outline: none;
+}
+.dropzone {
+  border: 2px dashed #b9c0ff;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  background: #fafbff;
+  cursor: pointer;
+  transition: .2s;
+}
+.dropzone.dragover {
+  background: #eef0ff;
+  border-color: #667eea;
+}
+.upload-list {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.upload-item {
+  background: #f8f9ff;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.upload-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 6px;
+  gap: 10px;
+}
+.progress {
+  height: 8px;
+  background: #e6e8f5;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress > div {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  transition: width .2s;
+}
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.08);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.preview {
+  height: 170px;
+  background: #f3f4fb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.preview audio {
+  width: 90%;
+}
+.card-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.filename {
+  font-size: 13px;
+  font-weight: 700;
+  word-break: break-all;
+}
+.link-input {
+  width: 100%;
+  font-size: 12px;
+  padding: 8px;
+  border: 1px solid #e1e4f0;
+  border-radius: 8px;
+  background: #fafbff;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+}
+.actions button {
+  flex: 1;
+  padding: 8px 6px;
+  font-size: 12px;
+}
+.empty {
+  text-align: center;
+  color: #888;
+  padding: 30px 0;
+}
+#toastBox {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 9999;
+}
+.toast {
+  background: #333;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.2);
+  animation: slideIn .25s ease;
+  max-width: 320px;
+  font-size: 14px;
+}
+.toast.success { background: #22a06b; }
+.toast.error { background: #e5484d; }
+.toast.info { background: #4f6bed; }
+@keyframes slideIn {
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@media (max-width: 600px) {
+  header { padding: 16px; }
+  header h1 { font-size: 16px; }
+  .preview { height: 150px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🖼️ GitHub Pages 图床</h1>
+  <button id="refreshBtn" class="secondary">刷新图库</button>
+</header>
+
+<div class="container">
+  <section class="panel">
+    <h2>1. Token 设置</h2>
+    <div class="token-row">
+      <input id="tokenInput" type="password" placeholder="粘贴 GitHub Personal Access Token（ghp_ 开头）">
+      <button id="saveTokenBtn">保存 Token</button>
+    </div>
+    <p style="font-size:12px;color:#777;margin:8px 0 0;">
+      Token 只保存在当前浏览器 localStorage，不会上传到别处。
+      建议使用 classic token 勾选 repo，或 Fine-grained token 仅给该仓库 Contents 读写。
+    </p>
+  </section>
+
+  <section class="panel">
+    <h2>2. 上传文件</h2>
+    <div id="dropzone" class="dropzone">
+      <p style="margin:0 0 6px;font-weight:700;">点击选择文件，或把文件拖到这里</p>
+      <p style="margin:0;color:#777;font-size:13px;">
+        支持图片：jpg/jpeg/png/gif/webp/svg/bmp/ico；音频：mp3/wav/m4a/ogg/flac/aac
+      </p>
+      <input id="fileInput" type="file" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.bmp,.ico,.mp3,.wav,.m4a,.ogg,.flac,.aac" hidden>
+    </div>
+    <div id="uploadList" class="upload-list"></div>
+  </section>
+
+  <section class="panel">
+    <h2>3. 图库</h2>
+    <div id="gallery" class="gallery"></div>
+    <div id="galleryEmpty" class="empty">暂无文件，先上传一个吧。</div>
+  </section>
+</div>
+
+<div id="toastBox"></div>
+
+<script>
+// ====== 这里已经改成你自己的信息 ======
+const USERNAME = "abcddd913";
+const REPO = "yue";
+const BRANCH = "main";
+// ====================================
+
+const TOKEN_KEY = "github_pages_image_bed_token";
+const IMAGE_EXT = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"];
+const AUDIO_EXT = ["mp3", "wav", "m4a", "ogg", "flac", "aac"];
+const API_BASE = `https://api.github.com/repos/${USERNAME}/${REPO}/contents`;
+const PAGES_BASE = `https://${USERNAME}.github.io/${REPO}/`;
+
+let token = localStorage.getItem(TOKEN_KEY) || "";
+
+const tokenInput = document.getElementById("tokenInput");
+const saveTokenBtn = document.getElementById("saveTokenBtn");
+const refreshBtn = document.getElementById("refreshBtn");
+const dropzone = document.getElementById("dropzone");
+const fileInput = document.getElementById("fileInput");
+const uploadList = document.getElementById("uploadList");
+const gallery = document.getElementById("gallery");
+const galleryEmpty = document.getElementById("galleryEmpty");
+const toastBox = document.getElementById("toastBox");
+
+tokenInput.value = token;
+
+function toast(message, type = "info") {
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+  el.textContent = message;
+  toastBox.appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = "0";
+    el.style.transform = "translateX(20px)";
+    setTimeout(() => el.remove(), 250);
+  }, 2600);
+}
+
+function headers() {
+  const h = {
+    "Accept": "application/vnd.github+json",
+    "Content-Type": "application/json"
+  };
+  if (token) h.Authorization = `Bearer ${token}`;
+  return h;
+}
+
+function encodePath(name) {
+  return name.split("/").map(encodeURIComponent).join("/");
+}
+
+function fileUrl(name) {
+  return PAGES_BASE + encodePath(name);
+}
+
+function extOf(name) {
+  const i = name.lastIndexOf(".");
+  return i === -1 ? "" : name.slice(i + 1).toLowerCase();
+}
+
+function isAllowed(name) {
+  const ext = extOf(name);
+  return IMAGE_EXT.includes(ext) || AUDIO_EXT.includes(ext);
+}
+
+function isImage(name) {
+  return IMAGE_EXT.includes(extOf(name));
+}
+
+function isAudio(name) {
+  return AUDIO_EXT.includes(extOf(name));
+}
+
+saveTokenBtn.onclick = () => {
+  token = tokenInput.value.trim();
+  localStorage.setItem(TOKEN_KEY, token);
+  toast(token ? "Token 已保存" : "Token 已清空", "success");
+};
+
+refreshBtn.onclick = () => loadGallery();
+
+dropzone.onclick = () => fileInput.click();
+
+fileInput.onchange = () => {
+  handleFiles(fileInput.files);
+  fileInput.value = "";
+};
+
+dropzone.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  dropzone.classList.add("dragover");
+});
+
+dropzone.addEventListener("dragleave", () => {
+  dropzone.classList.remove("dragover");
+});
+
+dropzone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dropzone.classList.remove("dragover");
+  handleFiles(e.dataTransfer.files);
+});
+
+function handleFiles(files) {
+  const arr = Array.from(files).filter(f => isAllowed(f.name));
+  if (!arr.length) {
+    toast("没有可上传的图片或音频文件", "error");
+    return;
+  }
+  arr.forEach(uploadFile);
+}
+
+function createUploadItem(name) {
+  const item = document.createElement("div");
+  item.className = "upload-item";
+  item.innerHTML = `
+    <div class="upload-meta">
+      <span>${escapeHtml(name)}</span>
+      <span class="status">等待中</span>
+    </div>
+    <div class="progress"><div></div></div>
+  `;
+  uploadList.prepend(item);
+  return item;
+}
+
+function setUploadStatus(item, text, percent, type = "") {
+  const statusEl = item.querySelector(".status");
+  statusEl.textContent = text;
+  statusEl.style.color =
+    type === "error" ? "#e5484d" :
+    type === "success" ? "#22a06b" : "";
+  item.querySelector(".progress > div").style.width = `${percent}%`;
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      const base64 = result.split(",")[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function getExistingSha(name) {
+  try {
+    const res = await fetch(`${API_BASE}/${encodePath(name)}?ref=${BRANCH}`, {
+      headers: headers()
+    });
+    if (res.status === 200) {
+      const data = await res.json();
+      return data.sha;
+    }
+  } catch (e) {}
+  return null;
+}
+
+async function uploadFile(file) {
+  const name = file.name;
+  const item = createUploadItem(name);
+  setUploadStatus(item, "读取中...", 5);
+
+  try {
+    const base64 = await fileToBase64(file);
+    setUploadStatus(item, "检查同名文件...", 15);
+
+    const sha = await getExistingSha(name);
+    setUploadStatus(item, "上传中...", 40);
+
+    const body = {
+      message: `upload ${name} ${new Date().toISOString()}`,
+      content: base64,
+      branch: BRANCH
+    };
+
+    if (sha) body.sha = sha;
+
+    const res = await fetch(`${API_BASE}/${encodePath(name)}`, {
+      method: "PUT",
+      headers: headers(),
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP ${res.status}`);
+    }
+
+    setUploadStatus(item, "上传成功", 100, "success");
+    toast(`${name} 上传成功`, "success");
+    setTimeout(() => loadGallery(), 800);
+  } catch (err) {
+    setUploadStatus(item, `失败：${err.message}`, 100, "error");
+    toast(`${name} 上传失败：${err.message}`, "error");
+  }
+}
+
+async function loadGallery() {
+  gallery.innerHTML = "";
+  galleryEmpty.style.display = "none";
+
+  try {
+    const res = await fetch(`${API_BASE}?ref=${BRANCH}`, {
+      headers: headers()
+    });
+
+    if (res.status === 404) {
+      galleryEmpty.textContent = "仓库或分支不存在，或仓库为空。";
+      galleryEmpty.style.display = "block";
+      return;
+    }
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const files = data.filter(item => item.type === "file" && isAllowed(item.name));
+
+    if (!files.length) {
+      galleryEmpty.textContent = "暂无图片/音频文件。";
+      galleryEmpty.style.display = "block";
+      return;
+    }
+
+    files.forEach(file => gallery.appendChild(createCard(file)));
+  } catch (err) {
+    galleryEmpty.textContent = `加载失败：${err.message}`;
+    galleryEmpty.style.display = "block";
+    toast(`加载图库失败：${err.message}`, "error");
+  }
+}
+
+function createCard(file) {
+  const name = file.name;
+  const link = fileUrl(name);
+  const card = document.createElement("div");
+  card.className = "card";
+
+  let preview = "";
+  if (isImage(name)) {
+    preview = `<img src="${link}" alt="${escapeHtml(name)}" loading="lazy" onerror="this.style.display='none'">`;
+  } else if (isAudio(name)) {
+    preview = `<audio controls preload="none" src="${link}"></audio>`;
+  } else {
+    preview = `<span style="color:#999;">文件</span>`;
+  }
+
+  card.innerHTML = `
+    <div class="preview">${preview}</div>
+    <div class="card-body">
+      <div class="filename">${escapeHtml(name)}</div>
+      <input class="link-input" readonly value="${escapeAttr(link)}">
+      <div class="actions">
+        <button data-action="copy" data-link="${escapeAttr(link)}">复制</button>
+        <button data-action="open" data-link="${escapeAttr(link)}">打开</button>
+        <button data-action="delete" data-name="${escapeAttr(name)}" data-sha="${escapeAttr(file.sha)}" class="danger">删除</button>
+      </div>
+    </div>
+  `;
+  return card;
+}
+
+gallery.addEventListener("click", async (e) => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+
+  const action = btn.dataset.action;
+
+  if (action === "copy") {
+    const link = btn.dataset.link;
+    try {
+      await navigator.clipboard.writeText(link);
+      toast("链接已复制", "success");
+    } catch {
+      const input = btn.closest(".card").querySelector(".link-input");
+      input.select();
+      document.execCommand("copy");
+      toast("链接已复制", "success");
+    }
+  }
+
+  if (action === "open") {
+    window.open(btn.dataset.link, "_blank");
+  }
+
+  if (action === "delete") {
+    const name = btn.dataset.name;
+    const sha = btn.dataset.sha;
+
+    if (!confirm(`确定删除 ${name} 吗？`)) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/${encodePath(name)}`, {
+        method: "DELETE",
+        headers: headers(),
+        body: JSON.stringify({
+          message: `delete ${name}`,
+          sha,
+          branch: BRANCH
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `HTTP ${res.status}`);
+      }
+
+      toast(`${name} 已删除`, "success");
+      loadGallery();
+    } catch (err) {
+      toast(`删除失败：${err.message}`, "error");
+    }
+  }
+});
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, s => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[s]));
+}
+
+function escapeAttr(str) {
+  return escapeHtml(str);
+}
+
+loadGallery();
+</script>
+</body>
+  </html>
